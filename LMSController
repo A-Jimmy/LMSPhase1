@@ -1,0 +1,255 @@
+/*
+Andres Jimmy
+Software Development I - CEN 3024
+August 9, 2023
+LMSController class main method for a user to add, remove, and list
+books from a text file
+ */
+
+package org.example;
+
+import java.io.*;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Scanner;
+
+
+public class LMSController {
+
+
+    public static void main(String[] args) throws IOException {
+
+        ArrayList<LMS> collectionList = new ArrayList<LMS>();
+
+        //Ask user for file name
+        Scanner inputFile = new Scanner(System.in);
+        System.out.println("Start by entering file name");
+        String userFile = inputFile.nextLine();
+        File fileToEdit = new File(userFile);
+
+        while (!fileToEdit.exists()) {
+            System.out.println("file not found please try again");
+            userFile = inputFile.nextLine();
+            fileToEdit = new File(userFile);
+        }
+        System.out.println("Printing data...");
+        readFile(fileToEdit);
+
+//The scanner fileScan and while loop is used to parse through the file
+// and add to the arrayList of LMS objects "collection" for editing
+        Scanner fileScan = new Scanner(fileToEdit);
+        while (fileScan.hasNext()) {
+            String[] split = fileScan.nextLine().split(",");
+            collectionList.add(new LMS(Integer.parseInt(split[0]), split[1], split[2], split[3], split[4]));
+        }
+        fileScan.close();
+
+        String menu = "Please pick an option\n" +
+                "1. Add a book to collection\n" +
+                "2. Remove a book from collection by title or barcode number\n" +
+                "3.List all books in collection\n" +
+                "4.Check out a book\n" +
+                "5.Check in a book\n" +
+                "6.Exit";
+
+        int menuInput = 0;
+
+        while (menuInput != 6) {
+
+            System.out.println(menu);
+            Scanner userSelect = new Scanner(System.in);
+            menuInput = userSelect.nextInt();
+
+            switch (menuInput) {
+                case 1:
+/*Method name:addBookToList(ArrayList<LMS> arrayList);
+Uses LMS class to add an object of type LMS to collection ArrayList
+*/
+                    addBookToList(collectionList);
+
+
+                    writeToFile(fileToEdit, collectionList);
+                    break;
+                case 2:readFile(fileToEdit);
+/*Method name: removeBookByID(ArrayList<LMS> arrayList)
+Asks user for barcode number to remove book from list
+ */
+                    removeBook(collectionList);
+
+                    writeToFile(fileToEdit, collectionList);
+                    readFile(fileToEdit);
+                    break;
+                case 3:
+                    // listBooks(collection);
+                    readFile(fileToEdit);
+                    break;
+                case 4:
+ /*  Method name: checkOut(ArrayList<LMS> arrayList);
+ Ask user for book title to check out and sets status to "checked out"
+  */
+                    checkOut(collectionList);
+
+                    writeToFile(fileToEdit, collectionList);
+                    readFile(fileToEdit);
+                    break;
+                case 5:
+ /*  Method name: checkIn(ArrayList<LMS> arrayList);
+ Ask user for book title to check in and sets status to "checked in"
+  */
+                    checkIn(collectionList);
+
+                    writeToFile(fileToEdit, collectionList);
+                    readFile(fileToEdit);
+                    break;
+                case 6:
+                    System.out.println("Exiting");
+                    break;
+                default:
+                    System.out.println("Please try again");
+                    break;
+
+
+            }
+        }
+    }
+
+    /*
+    Method name: addBookToList(ArrayList<LMS> arrayList)
+    Adds a user entry to an array list of class LMS and sets an id number
+     */
+    public static void addBookToList(ArrayList<LMS> arrayList) {
+        arrayList.add(new LMS());
+
+
+    }
+
+    /*
+    Method name: removeBook(ArrayList<LMS> arrayList)
+    Asks user for barcode or title to remove book from list
+
+     */
+    public static void removeBook(ArrayList<LMS> arrayList) {
+
+        Scanner input = new Scanner(System.in);
+
+        System.out.println("Press 1 to remove with barcode or press 2 to remove with title");
+        int option = input.nextInt();
+        input.nextLine();
+        if (option == 1) {
+            System.out.println("Enter barcode");
+            int barcode = input.nextInt();
+            for (int i = 0; i < arrayList.size(); i++) {
+                if (arrayList.get(i).getBarcode() == barcode) {
+                    arrayList.remove(i);
+                }
+            }
+        }
+        if (option == 2) {
+            System.out.println("Enter title");
+
+            String removeTitle = input.nextLine();
+            for (int i = 0; i < arrayList.size(); i++) {
+                if (arrayList.get(i).getTitle().equals(removeTitle)) {
+                    arrayList.remove(i);
+                }
+            }
+        }
+
+    }
+
+
+    //Unused method to shows contents of array list
+    public static void listBooks(ArrayList<LMS> arrayList) {
+        for (int i = 0; i < arrayList.size(); i++) {
+            System.out.println(arrayList.get(i));
+            //  System.out.println(arrayList);
+        }
+
+
+    }
+
+    /*Method name: readFile(File fileP)
+    Prints out contents from text file
+    */
+    public static void readFile(File fileP) throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader(fileP));
+        String s;
+        System.out.println();
+        System.out.println("Book Collection");
+        while ((s = br.readLine()) != null) {
+            System.out.println(s);
+        }
+        System.out.println();
+
+    }
+
+    /*Method name:checkOut(ArrayList<LMS> arrayList)
+        Lists the books in file, asks user for title of book,
+        check for availability, set book status to checked out, and updates due date
+         */
+    public static void checkOut(ArrayList<LMS> arrayList) {
+        LocalDate date = LocalDate.now();
+        LocalDate due = date.plusDays(30);
+        Scanner outInput = new Scanner(System.in);
+        System.out.println("Enter title of book to check out");
+        listBooks(arrayList);
+
+        String checkOut = outInput.nextLine();
+        for (int i = 0; i < arrayList.size(); i++) {
+            if (arrayList.get(i).getTitle().equals(checkOut) && !arrayList.get(i).getStatus().equals("Checked Out")) {
+                arrayList.get(i).setStatus("Checked Out");
+                arrayList.get(i).setDueDate(String.valueOf(due));
+                System.out.println(arrayList.get(i).getTitle() + " is now checked out\n");
+               break;
+            }else if(arrayList.get(i).getTitle().equals(checkOut) && arrayList.get(i).getStatus().equals("Checked Out")){
+                System.out.println(checkOut + " is not available for check out");
+
+
+        }
+
+            }
+        }
+
+
+
+    /*Method name:checkIn(ArrayList<LMS> arrayList)
+    Lists the books in file, asks user for title of book,
+    set book status to checked in, and updates due date
+     */
+    public static void checkIn(ArrayList<LMS> arrayList) {
+        Scanner inInput = new Scanner(System.in);
+        System.out.println("Enter title of book to check in\n");
+        listBooks(arrayList);
+
+        String checkIn = inInput.nextLine();
+        for (int i = 0; i < arrayList.size(); i++) {
+            if (arrayList.get(i).getTitle().equals(checkIn) && arrayList.get(i).getStatus().equals("Checked Out")) {
+                arrayList.get(i).setStatus("Checked In");
+                arrayList.get(i).setDueDate("null");
+                System.out.println(arrayList.get(i).getTitle() + " is now checked in");
+                break;
+            }
+
+
+        }
+    }
+
+    /*Method name:writeToFile(File file,ArrayList<LMS> arrayList) throws IOException
+    Method to write current arraylist to file
+     */
+    public static void writeToFile(File file, ArrayList<LMS> arrayList) throws IOException {
+        FileWriter fw = new FileWriter(file);
+        for (LMS string : arrayList) {
+            fw.write(string + System.lineSeparator());
+        }
+        fw.close();
+    }
+
+}
+
+
+
+
+
+
